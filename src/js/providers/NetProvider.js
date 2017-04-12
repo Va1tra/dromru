@@ -6,14 +6,16 @@ export default class NetProvider {
 
     find(search) {
         let storage = {
-            _requestPromise: '',
+            _requestWasMade: false,
+            _url: this._generateUrlFn(search),
+            search: search,
             next: function() {
-                if (this._requestPromise) {
+                if (this._requestWasMade) {
                     return Promise.reject('no next items');
                 } else {
-                    this._requestPromise = $.get(this.generateUrlFn(search));
+                    this._requestWasMade = true;
 
-                    return this._requestPromise;
+                    return $.get(this._url);
                 }
             }
         };
