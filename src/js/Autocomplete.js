@@ -132,6 +132,7 @@ class AutoComplete {
         let scrollTimeout;
 
         $(this._list)
+            .hide()
             .insertAfter(this.input)
             .on('scroll', _.debounce((e) => {
                 if (this._list.scrollHeight - this._list.clientHeight - this._list.scrollTop < Math.max(Math.min(200, this._list.clientHeight * 0.2), 50)) {

@@ -622,7 +622,7 @@ var AutoComplete = function () {
 
             var scrollTimeout = void 0;
 
-            $(this._list).insertAfter(this.input).on('scroll', _underscore2.default.debounce(function (e) {
+            $(this._list).hide().insertAfter(this.input).on('scroll', _underscore2.default.debounce(function (e) {
                 if (_this2._list.scrollHeight - _this2._list.clientHeight - _this2._list.scrollTop < Math.max(Math.min(200, _this2._list.clientHeight * 0.2), 50)) {
                     _this2._showMore();
                 }
