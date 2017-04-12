@@ -1,0 +1,33 @@
+.form-group {
+    max-width: 400px;
+}
+
+.list {
+    max-height: 200px;
+    overflow-y: scroll;
+    position: relative;
+
+    &_category {
+        text-align: center;
+        font-size: 150%;
+    }
+
+    &_item {
+        &_intersection {
+            color: orange;
+        }
+
+        &.__selected {
+            background: #eeeeee;
+        }
+
+        &:hover {
+            cursor: pointer;
+            background-color: #efefef;
+        }
+    }
+
+    &.__scrolling {
+        pointer-events: none;
+    }
+}
