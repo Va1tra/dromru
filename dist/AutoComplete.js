@@ -503,8 +503,8 @@ var AutoComplete = function () {
 
                 this._storage.next().then(function (chunk) {
                     return _this.renderer.render(_this._storage.search, chunk);
-                }).then(function (html) {
-                    $(_this._list).append(html);
+                }).then(function (elements) {
+                    $(_this._list).append(elements);
                     _this._gettingMore = false;
                     _this._hideSpinner();
                 }).catch(function (error) {
@@ -523,15 +523,8 @@ var AutoComplete = function () {
     }, {
         key: '_selectNext',
         value: function _selectNext() {
-            if (this._selected) {
-                this._getNext(this._selected).forEach(function (node) {
-                    return $(node).trigger('click');
-                });
-            } else {
-                [this._list.querySelector('[data-value]')].forEach(function (node) {
-                    return $(node).trigger('click');
-                });
-            }
+            var node = this._selected ? this._getNext(this._selected) : this._list.querySelector('[data-value]');
+            node && this._select(node);
         }
     }, {
         key: '_getNext',
@@ -540,26 +533,19 @@ var AutoComplete = function () {
 
             while (next) {
                 if (next.hasAttribute('data-value')) {
-                    return [next];
+                    return next;
                 }
 
                 next = next.nextElementSibling;
             }
 
-            return [];
+            return null;
         }
     }, {
         key: '_selectPrev',
         value: function _selectPrev() {
-            if (this._selected) {
-                this._getPrev(this._selected).forEach(function (node) {
-                    return $(node).trigger('click');
-                });
-            } else {
-                [this._list.querySelector('[data-value]')].forEach(function (node) {
-                    return $(node).trigger('click');
-                });
-            }
+            var node = this._selected ? this._getPrev(this._selected) : this._list.querySelector('[data-value]');
+            node && this._select(node);
         }
     }, {
         key: '_getPrev',
@@ -568,13 +554,24 @@ var AutoComplete = function () {
 
             while (prev) {
                 if (prev.hasAttribute('data-value')) {
-                    return [prev];
+                    return prev;
                 }
 
                 prev = prev.previousElementSibling;
             }
 
-            return [];
+            return null;
+        }
+    }, {
+        key: '_select',
+        value: function _select(node) {
+            this._selected && this._selected.classList.remove('__selected');
+            this._selected = node;
+            this._selected.classList.add('__selected');
+            this._scrollToSelectedItemIfNeeded(node);
+
+            this.input.value = this._selected.getAttribute('data-value');
+            document.activeElement !== this.input && this.input.focus();
         }
     }, {
         key: '_scrollToSelectedItemIfNeeded',
@@ -602,21 +599,34 @@ var AutoComplete = function () {
                 if (search) {
                     _this2.provider.find(search).then(function (storage) {
                         _this2._storage = storage;
-                        $(_this2._list).empty().scrollTop(0).show();
+                        $(_this2._list).empty().show().scrollTop(0);
                         _this2._selected = null;
                         _this2._showMore();
                     });
                 } else {
                     $(_this2._list).hide().empty();
+                    _this2._storage = null;
                     _this2._selected = null;
                 }
             }, 500));
 
             $(this.input).parent().on('keydown', function (e) {
                 if (e.key === 'ArrowUp') {
-                    _this2._selectPrev();
+                    if (_this2._selected && !$(_this2._list).is(':visible')) {
+                        $(_this2._list).show();
+                        _this2._scrollToSelectedItemIfNeeded(_this2._selected);
+                    } else {
+                        _this2._selectPrev();
+                    }
                 } else if (e.key === 'ArrowDown') {
-                    _this2._selectNext();
+                    if (_this2._selected && !$(_this2._list).is(':visible')) {
+                        $(_this2._list).show();
+                        _this2._scrollToSelectedItemIfNeeded(_this2._selected);
+                    } else {
+                        _this2._selectNext();
+                    }
+                } else if (e.key === 'Enter') {
+                    $(_this2._list).hide();
                 }
             });
 
@@ -632,14 +642,8 @@ var AutoComplete = function () {
                     return _this2._list.classList.remove('__scrolling');
                 }, 100);
             }, 50)).on('click', '[data-value]', function (e) {
-                (_this2._selected ? [_this2._selected] : []).forEach(function (node) {
-                    return node.classList.remove('__selected');
-                });
-                _this2._selected = e.currentTarget;
-                _this2._selected.classList.add('__selected');
-                _this2.input.value = _this2._selected.getAttribute('data-value');
-
-                _this2._scrollToSelectedItemIfNeeded(e.currentTarget);
+                _this2._select(e.currentTarget);
+                $(_this2._list).hide();
             });
         }
     }]);

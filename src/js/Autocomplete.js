@@ -29,8 +29,8 @@ class AutoComplete {
 
             this._storage.next()
                 .then((chunk) => this.renderer.render(this._storage.search, chunk))
-                .then((html) => {
-                    $(this._list).append(html);
+                .then((elements) => {
+                    $(this._list).append(elements);
                     this._gettingMore = false;
                     this._hideSpinner();
                 })
@@ -47,11 +47,8 @@ class AutoComplete {
     _hideSpinner() {}
 
     _selectNext() {
-        if (this._selected) {
-            this._getNext(this._selected).forEach(node => $(node).trigger('click'));
-        } else {
-            [this._list.querySelector('[data-value]')].forEach(node => $(node).trigger('click'));
-        }
+        let node = this._selected ? this._getNext(this._selected) : this._list.querySelector('[data-value]');
+        node && this._select(node);
     }
 
     _getNext(node) {
@@ -59,21 +56,18 @@ class AutoComplete {
 
         while (next) {
             if (next.hasAttribute('data-value')) {
-                return [next];
+                return next;
             }
 
             next = next.nextElementSibling;
         }
 
-        return [];
+        return null;
     }
 
     _selectPrev() {
-        if (this._selected) {
-            this._getPrev(this._selected).forEach(node => $(node).trigger('click'));
-        } else {
-            [this._list.querySelector('[data-value]')].forEach(node => $(node).trigger('click'));
-        }
+        let node = this._selected ? this._getPrev(this._selected) : this._list.querySelector('[data-value]');
+        node && this._select(node);
     }
 
     _getPrev(node) {
@@ -81,13 +75,23 @@ class AutoComplete {
 
         while (prev) {
             if (prev.hasAttribute('data-value')) {
-                return [prev];
+                return prev;
             }
 
             prev = prev.previousElementSibling;
         }
 
-        return [];
+        return null;
+    }
+
+    _select(node) {
+        this._selected && this._selected.classList.remove('__selected');
+        this._selected = node;
+        this._selected.classList.add('__selected');
+        this._scrollToSelectedItemIfNeeded(node);
+
+        this.input.value = this._selected.getAttribute('data-value');
+        document.activeElement !== this.input && this.input.focus();
     }
 
     _scrollToSelectedItemIfNeeded(node) {
@@ -111,21 +115,34 @@ class AutoComplete {
             if (search) {
                 this.provider.find(search).then((storage) => {
                     this._storage = storage;
-                    $(this._list).empty().scrollTop(0).show();
+                    $(this._list).empty().show().scrollTop(0);
                     this._selected = null;
                     this._showMore();
                 });
             } else {
                 $(this._list).hide().empty();
+                this._storage = null;
                 this._selected = null;
             }
         }, 500));
 
         $(this.input).parent().on('keydown', (e) => {
             if (e.key === 'ArrowUp') {
-                this._selectPrev();
+                if (this._selected && !$(this._list).is(':visible')) {
+                    $(this._list).show();
+                    this._scrollToSelectedItemIfNeeded(this._selected);
+                } else {
+                    this._selectPrev();
+                }
             } else if (e.key === 'ArrowDown') {
-                this._selectNext();
+                if (this._selected && !$(this._list).is(':visible')) {
+                    $(this._list).show();
+                    this._scrollToSelectedItemIfNeeded(this._selected);
+                } else {
+                    this._selectNext();
+                }
+            } else if (e.key === 'Enter') {
+                $(this._list).hide();
             }
         });
 
@@ -143,12 +160,8 @@ class AutoComplete {
                 scrollTimeout = setTimeout(() => this._list.classList.remove('__scrolling'), 100);
             }, 50))
             .on('click', '[data-value]', (e) => {
-                (this._selected ? [this._selected] : []).forEach(node => node.classList.remove('__selected'));
-                this._selected = e.currentTarget;
-                this._selected.classList.add('__selected');
-                this.input.value = this._selected.getAttribute('data-value');
-
-                this._scrollToSelectedItemIfNeeded(e.currentTarget);
+                this._select(e.currentTarget);
+                $(this._list).hide();
             });
     }
 }
