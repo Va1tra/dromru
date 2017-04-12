@@ -15,5 +15,3 @@
   .list_item:hover {
     cursor: pointer;
     background-color: #efefef; }
-  .list.__scrolling {
-    pointer-events: none; }

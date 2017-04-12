@@ -257,14 +257,16 @@ var NetProvider = function () {
         key: 'find',
         value: function find(search) {
             var storage = {
-                _requestPromise: '',
+                _requestWasMade: false,
+                _url: this._generateUrlFn(search),
+                search: search,
                 next: function next() {
-                    if (this._requestPromise) {
+                    if (this._requestWasMade) {
                         return Promise.reject('no next items');
                     } else {
-                        this._requestPromise = $.get(this.generateUrlFn(search));
+                        this._requestWasMade = true;
 
-                        return this._requestPromise;
+                        return $.get(this._url);
                     }
                 }
             };
@@ -636,11 +638,6 @@ var AutoComplete = function () {
                 if (_this2._list.scrollHeight - _this2._list.clientHeight - _this2._list.scrollTop < Math.max(Math.min(200, _this2._list.clientHeight * 0.2), 50)) {
                     _this2._showMore();
                 }
-                _this2._list.classList.add('__scrolling');
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(function () {
-                    return _this2._list.classList.remove('__scrolling');
-                }, 100);
             }, 50)).on('click', '[data-value]', function (e) {
                 _this2._select(e.currentTarget);
                 $(_this2._list).hide();

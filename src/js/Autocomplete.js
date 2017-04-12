@@ -155,9 +155,6 @@ class AutoComplete {
                 if (this._list.scrollHeight - this._list.clientHeight - this._list.scrollTop < Math.max(Math.min(200, this._list.clientHeight * 0.2), 50)) {
                     this._showMore();
                 }
-                this._list.classList.add('__scrolling');
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => this._list.classList.remove('__scrolling'), 100);
             }, 50))
             .on('click', '[data-value]', (e) => {
                 this._select(e.currentTarget);
